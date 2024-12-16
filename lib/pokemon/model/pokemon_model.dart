@@ -6,10 +6,15 @@ class PokemonModel {
   final String spriteRegular;
   final String spriteShiny;
   final List<PokemonType> types;
+  final List<PokemonTalent> talents;
   final PokemonStats stats;
   final List<PokemonResistance> resistances;
   final PokemonEvolution evolution;
   final int catchRate;
+  final String height;
+  final String weight;
+  final double maleRate;
+  final double femaleRate;
 
   const PokemonModel({
     required this.id,
@@ -19,39 +24,52 @@ class PokemonModel {
     required this.spriteRegular,
     required this.spriteShiny,
     required this.types,
+    required this.talents,
     required this.stats,
     required this.resistances,
     required this.evolution,
     required this.catchRate,
+    required this.height,
+    required this.weight,
+    required this.maleRate,
+    required this.femaleRate,
   });
 
-  /// Méthode statique pour créer un PokemonModel à partir d’un JSON
   factory PokemonModel.fromJson(Map<String, dynamic> json) {
-  final nameJson = Map<String, dynamic>.from(json['name'] ?? {});
-  final spritesJson = Map<String, dynamic>.from(json['sprites'] ?? {});
-  final typesJson = json['types'] ?? [];
-  final statsJson = Map<String, dynamic>.from(json['stats'] ?? {});
-  final resistancesJson = json['resistances'] ?? [];
-  final evolutionJson = Map<String, dynamic>.from(json['evolution'] ?? {});
+    final nameJson = Map<String, dynamic>.from(json['name'] ?? {});
+    final spritesJson = Map<String, dynamic>.from(json['sprites'] ?? {});
+    final typesJson = json['types'] ?? [];
+    final statsJson = Map<String, dynamic>.from(json['stats'] ?? {});
+    final resistancesJson = json['resistances'] ?? [];
+    final evolutionJson = Map<String, dynamic>.from(json['evolution'] ?? {});
+    final talentsJson = json['talents'] ?? [];
+    final sexeJson = json['sexe'] ?? {};
 
-  return PokemonModel(
-    id: (json['pokedex_id'] as int?) ?? 0, // Valeur par défaut si null
-    generation: (json['generation'] as int?) ?? 0,
-    category: (json['category'] as String?) ?? 'Inconnu',
-    nameFr: (nameJson['fr'] ?? '') as String,
-    spriteRegular: (spritesJson['regular'] ?? '') as String,
-    spriteShiny: (spritesJson['shiny'] ?? '') as String,
-    types: (typesJson as List)
-        .map((t) => PokemonType.fromJson(Map<String, dynamic>.from(t)))
-        .toList(),
-    stats: PokemonStats.fromJson(statsJson),
-    resistances: (resistancesJson as List)
-        .map((r) => PokemonResistance.fromJson(Map<String, dynamic>.from(r)))
-        .toList(),
-    evolution: PokemonEvolution.fromJson(evolutionJson),
-    catchRate: (json['catch_rate'] as int?) ?? 0,
-  );
-}
+    return PokemonModel(
+      id: (json['pokedex_id'] as int?) ?? 0, // Valeur par défaut si null
+      generation: (json['generation'] as int?) ?? 0,
+      category: (json['category'] as String?) ?? 'Inconnu',
+      nameFr: (nameJson['fr'] ?? '') as String,
+      spriteRegular: (spritesJson['regular'] ?? '') as String,
+      spriteShiny: (spritesJson['shiny'] ?? '') as String,
+      types: (typesJson as List)
+          .map((t) => PokemonType.fromJson(Map<String, dynamic>.from(t)))
+          .toList(),
+      talents: (talentsJson as List)
+          .map((t) => PokemonTalent.fromJson(Map<String, dynamic>.from(t)))
+          .toList(),
+      stats: PokemonStats.fromJson(statsJson),
+      resistances: (resistancesJson as List)
+          .map((r) => PokemonResistance.fromJson(Map<String, dynamic>.from(r)))
+          .toList(),
+      evolution: PokemonEvolution.fromJson(evolutionJson),
+      catchRate: (json['catch_rate'] as int?) ?? 0,
+      height: (json['height'] as String?) ?? '',
+      weight: (json['weight'] as String?) ?? '',
+      maleRate: (sexeJson['male'] is num) ? (sexeJson['male'] as num).toDouble() : 0.0,
+      femaleRate: (sexeJson['female'] is num) ? (sexeJson['female'] as num).toDouble() : 0.0,
+    );
+  }
 }
 
 class PokemonType {
@@ -67,6 +85,23 @@ class PokemonType {
     return PokemonType(
       name: json['name'] as String,
       image: json['image'] as String,
+    );
+  }
+}
+
+class PokemonTalent {
+  final String name;
+  final bool tc;
+
+  const PokemonTalent({
+    required this.name,
+    required this.tc,
+  });
+
+  factory PokemonTalent.fromJson(Map<String, dynamic> json) {
+    return PokemonTalent(
+      name: (json['name'] as String?) ?? '',
+      tc: (json['tc'] as bool?) ?? false,
     );
   }
 }
@@ -110,8 +145,6 @@ class PokemonResistance {
   });
 
   factory PokemonResistance.fromJson(Map<String, dynamic> json) {
-    // Le multiplier peut être int ou double dans certaines APIs,
-    // on s’assure de le caster en double.
     final mult = json['multiplier'];
     return PokemonResistance(
       name: json['name'] as String,
@@ -132,22 +165,22 @@ class PokemonEvolution {
   });
 
   factory PokemonEvolution.fromJson(Map<String, dynamic> json) {
-  final preJson = json['pre'] ?? [];
-  final nextJson = json['next'] ?? [];
-  final megaJson = json['mega'] ?? [];
+    final preJson = json['pre'] ?? [];
+    final nextJson = json['next'] ?? [];
+    final megaJson = json['mega'] ?? [];
 
-  return PokemonEvolution(
-    pre: (preJson as List)
-        .map((e) => PokemonEvolutionDetail.fromJson(Map<String, dynamic>.from(e)))
-        .toList(),
-    next: (nextJson as List)
-        .map((e) => PokemonEvolutionDetail.fromJson(Map<String, dynamic>.from(e)))
-        .toList(),
-    mega: (megaJson as List)
-        .map((e) => PokemonEvolutionDetail.fromJson(Map<String, dynamic>.from(e)))
-        .toList(),
-  );
-}
+    return PokemonEvolution(
+      pre: (preJson as List)
+          .map((e) => PokemonEvolutionDetail.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      next: (nextJson as List)
+          .map((e) => PokemonEvolutionDetail.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      mega: (megaJson as List)
+          .map((e) => PokemonEvolutionDetail.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+    );
+  }
 }
 
 class PokemonEvolutionDetail {

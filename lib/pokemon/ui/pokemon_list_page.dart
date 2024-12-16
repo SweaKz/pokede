@@ -5,6 +5,7 @@ import '../repository/pokemon_repository.dart';
 import '../bloc/pokemon_bloc.dart';
 import '../bloc/pokemon_state.dart';
 import '../bloc/pokemon_event.dart';
+import 'pokemon_detail_page.dart';
 
 // Fonction utilitaire pour choisir une couleur de fond selon le type principal
 Color getColorForType(String type) {
@@ -111,7 +112,13 @@ class PokemonListPage extends StatelessWidget {
 
                     return InkWell(
                       onTap: () {
-                        // Action lorsqu'on sélectionne un Pokémon, plus tard tu pourras aller vers la page détail
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PokemonDetailPage(pokemon: pokemon),
+                          ),
+                        );
                       },
                       child: Card(
                         color: bgColor,
