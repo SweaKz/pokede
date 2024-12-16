@@ -13,11 +13,11 @@ class FilterBloc extends Bloc<FilterEvent, FilterState> {
   void _onLoadDefaultFilters(
       LoadDefaultFilters event, Emitter<FilterState> emit) {
     final defaultFilters = [
-      FilterModel(name: "Kanto (1G)", backgroundImage: "assets/region/region-kanto.png", generations: [1]),
-      FilterModel(name: "Johto (2G)", backgroundImage: "assets/region/region-johto.png", generations: [2]),
-      FilterModel(name: "Hoenn (3G)", backgroundImage: "assets/region/region-hoenn.png", generations: [3]),
-      FilterModel(name: "Sinnoh (4G) / Hisui", backgroundImage: "assets/region/region-sinnoh.png", generations: [4]),
-      FilterModel(name: "Unys (5G)", backgroundImage: "assets/region/region-unys.png", generations: [5]),
+      const FilterModel(name: "Kanto (1G)", backgroundImage: "assets/region/region-kanto.png", generations: [1]),
+      const FilterModel(name: "Johto (2G)", backgroundImage: "assets/region/region-johto.png", generations: [2]),
+      const FilterModel(name: "Hoenn (3G)", backgroundImage: "assets/region/region-hoenn.png", generations: [3]),
+      const FilterModel(name: "Sinnoh (4G) / Hisui", backgroundImage: "assets/region/region-sinnoh.png", generations: [4]),
+      const FilterModel(name: "Unys (5G)", backgroundImage: "assets/region/region-unys.png", generations: [5]),
     ];
 
     emit(FiltersLoaded(defaultFilters));

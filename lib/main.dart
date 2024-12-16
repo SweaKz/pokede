@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'filter/bloc/filter_bloc.dart';
 import 'filter/bloc/filter_event.dart';
 import 'filter/ui/filter_selection_page.dart';
@@ -23,13 +24,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => BlocProvider(
               create: (context) => FilterBloc()..add(LoadDefaultFilters()),
-              child: FilterSelectionPage(),
+              child: const FilterSelectionPage(),
             ),
-        '/custom_filter': (context) => Scaffold(
+        '/custom_filter': (context) => const Scaffold(
               // Page intermédiaire pour créer un filtre personnalisé (à implémenter plus tard)
               body: Center(child: Text('Custom Filter Page')),
             ),
-        '/pokemon_list': (context) => Scaffold(
+        '/pokemon_list': (context) => const Scaffold(
               // Page d'affichage des Pokémon filtrés (à implémenter plus tard)
               body: Center(child: Text('Pokémon List Page')),
             ),

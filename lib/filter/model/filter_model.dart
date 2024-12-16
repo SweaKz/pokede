@@ -1,5 +1,4 @@
 class FilterModel {
-  /// Nom du filtre, requis.
   final String name;
   final String? backgroundImage;
   final List<int> generations;
