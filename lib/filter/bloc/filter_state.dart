@@ -18,16 +18,6 @@ class FiltersLoaded extends FilterState {
   List<Object?> get props => [filters];
 }
 
-class FilteredPokemonsLoaded extends FilterState {
-  final List<dynamic> pokemons;
-
-  FilteredPokemonsLoaded(this.pokemons);
-
-  @override
-  List<Object?> get props => [pokemons];
-}
-
-
 class FilterError extends FilterState {
   final String message;
 

@@ -17,12 +17,3 @@ class AddCustomFilter extends FilterEvent {
   @override
   List<Object?> get props => [filter];
 }
-
-class ApplyFilter extends FilterEvent {
-  final FilterModel filter;
-
-  ApplyFilter(this.filter);
-
-  @override
-  List<Object?> get props => [filter];
-}

@@ -1,21 +1,18 @@
 class FilterModel {
+  /// Nom du filtre, requis.
   final String name;
-  final String backgroundImage; // Image associée à la région
+  final String? backgroundImage;
   final List<int> generations;
-  final String? type1; // Premier type de Pokémon
-  final String? type2; // Deuxième type de Pokémon
-  final int? catchRate; // Taux de capture
-  final String? evolutionStage; // Stade d'évolution
-  final bool? isLegendary; // Pokémon légendaire ou non
+  final List<String> types;
+  final int? captureRate;
+  final bool? isLegendary;
 
-  FilterModel({
+  const FilterModel({
     required this.name,
-    required this.backgroundImage,
+    this.backgroundImage,
     this.generations = const [],
-    this.type1,
-    this.type2,
-    this.catchRate,
-    this.evolutionStage,
+    this.types = const [],
+    this.captureRate,
     this.isLegendary,
   });
 }
