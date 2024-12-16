@@ -1,32 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_radar_chart/flutter_radar_chart.dart';
 import '../model/pokemon_model.dart';
 
 class PokemonDetailPage extends StatefulWidget {
-  final PokemonModel pokemon;
-  const PokemonDetailPage({super.key, required this.pokemon});
+  final List<PokemonModel> pokemons;
+  final int currentIndex;
+
+  const PokemonDetailPage({
+    Key? key,
+    required this.pokemons,
+    required this.currentIndex,
+  }) : super(key: key);
 
   @override
   State<PokemonDetailPage> createState() => _PokemonDetailPageState();
 }
 
-class _PokemonDetailPageState extends State<PokemonDetailPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _PokemonDetailPageState extends State<PokemonDetailPage> {
+  late int currentIndex;
+  bool showShiny = false;
 
   @override
   void initState() {
-    _tabController = TabController(length: 3, vsync: this); 
-    // 3 tabs par exemple : About, Base Stats, Evolution
-    // Tu peux en rajouter un pour Moves : length: 4
     super.initState();
+    currentIndex = widget.currentIndex;
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  PokemonModel get currentPokemon => widget.pokemons[currentIndex];
 
-  Color getColorForType(String type) {
+Color getColorForType(String type) {
   switch (type.toLowerCase()) {
     case 'fée':
       return Colors.pinkAccent.shade100;
@@ -70,318 +72,330 @@ class _PokemonDetailPageState extends State<PokemonDetailPage> with SingleTicker
   }
 }
 
-  Widget buildTypeBadge(String type) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      margin: const EdgeInsets.only(right: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        type,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-    );
+  void nextPokemon() {
+    if (currentIndex < widget.pokemons.length - 1) {
+      setState(() {
+        currentIndex++;
+        showShiny = false;
+      });
+    }
+  }
+
+  void previousPokemon() {
+    if (currentIndex > 0) {
+      setState(() {
+        currentIndex--;
+        showShiny = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final pokemon = widget.pokemon;
+    final pokemon = currentPokemon;
     final primaryType = pokemon.types.isNotEmpty ? pokemon.types[0].name : 'Normal';
     final bgColor = getColorForType(primaryType);
+
+    final statsData = [
+      pokemon.stats.hp.toDouble(),
+      pokemon.stats.atk.toDouble(),
+      pokemon.stats.def.toDouble(),
+      pokemon.stats.speAtk.toDouble(),
+      pokemon.stats.speDef.toDouble(),
+      pokemon.stats.vit.toDouble(),
+    ];
+    final features = ["HP", "Atk", "Def", "SpA", "SpD", "Vit"];
+    final ticks = const [50, 100, 150, 200, 250];
 
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Contenu principal
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Bouton retour et favori en haut
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      InkWell(
-                        onTap: () => Navigator.pop(context),
-                        child: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                      ),
-                      const Icon(Icons.favorite_border, color: Colors.white, size: 28),
-                    ],
-                  ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Barre supérieure
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                    ),
+                    Image.asset(
+                      'assets/pokeball.png',
+                      width: 28,
+                      height: 28,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
-                // Nom du Pokémon et ID
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          pokemon.nameFr,
-                          style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+              ),
+
+              // Les 3 étoiles pour le mode shiny
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [1, 2, 3].map((i) {
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          showShiny = !showShiny;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Icon(
+                          Icons.star,
+                          color: showShiny ? Colors.yellow : Colors.white.withOpacity(0.5),
+                          size: 24,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              // AnimatedSwitcher pour animer le changement de pokémon
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                key: Key(pokemon.id.toString()),
+                child: Column(
+                  key: ValueKey<int>(currentIndex),
+                  children: [
+                    // GestureDetector pour swipe horizontal
+                    GestureDetector(
+                      onHorizontalDragEnd: (details) {
+                        if (details.primaryVelocity != null) {
+                          if (details.primaryVelocity! < 0) {
+                            // Swipe left => suivant
+                            nextPokemon();
+                          } else if (details.primaryVelocity! > 0) {
+                            // Swipe right => précédent
+                            previousPokemon();
+                          }
+                        }
+                      },
+                      child: Center(
+                        child: Image.network(
+                          showShiny ? pokemon.spriteShiny : pokemon.spriteRegular,
+                          height: 250,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Nom et catégorie centrés
+                    Text(
+                      pokemon.nameFr,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      pokemon.category,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Ligne ID + Types alignés
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            '#${pokemon.id.toString().padLeft(3, '0')}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
+                          const Spacer(),
+                          Row(
+                            children: pokemon.types.map((t) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Image.network(
+                                  t.image,
+                                  width: 30,
+                                  height: 30,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '#${pokemon.id.toString().padLeft(3, '0')}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Types du Pokémon
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: pokemon.types.map((t) => buildTypeBadge(t.name)).toList(),
-                  ),
-                ),
-                // Catégorie
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Text(
-                    pokemon.category,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
                     ),
-                  ),
-                ),
-                // Spacer pour laisser la place au Pokémon
-                const SizedBox(height: 16),
 
-                // Image du Pokémon au milieu
-                Container(
-                  height: MediaQuery.of(context).size.height * 0.4,
-                  alignment: Alignment.center,
-                  child: Image.network(
-                  pokemon.spriteRegular,
-                  width: 400,
-                  fit: BoxFit.contain,
-                  ),
-                ),
-                ],
-            ),
+                    const SizedBox(height: 16),
 
-            // Le container blanc arrondi en bas avec tabs
-            DraggableScrollableSheet(
-              initialChildSize: 0.4,
-              minChildSize: 0.3,
-              maxChildSize: 0.85,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
+                    // Sexe, Taille, Poids centrés
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('♂♀', style: TextStyle(fontSize: 16, color: Colors.white)),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Taille: ${pokemon.height}',
+                            style: const TextStyle(fontSize: 14, color: Colors.white),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Poids: ${pokemon.weight}',
+                            style: const TextStyle(fontSize: 14, color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Barre d'onglets
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: TabBar(
-                          controller: _tabController,
-                          indicatorColor: Colors.blueAccent,
-                          labelColor: Colors.black87,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(text: 'A propos'),
-                            Tab(text: 'Stats de base'),
-                            Tab(text: 'Evolution'),
-                            // Ajoute une autre tab si besoin (Moves)
-                            // Tab(text: 'Moves'),
-                          ],
-                        ),
+
+                    const SizedBox(height: 8),
+
+                    // Talents en gras
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (pokemon.talents.isNotEmpty)
+                            Text(
+                              'Talent: ${pokemon.talents.first.name}',
+                              style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          if (pokemon.talents.length > 1)
+                            Text(
+                              'Talent caché: ${pokemon.talents.last.name}',
+                              style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                        ],
                       ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            // ABOUT TAB
-                            SingleChildScrollView(
-                              controller: scrollController,
-                              padding: const EdgeInsets.all(16),
-                              child: const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'A propos',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    "Description basique du Pokémon, son habitat, ses habitudes, etc.",
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                  SizedBox(height: 16),
-                                  // Info sur la taille, le poids, etc.
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Column(
-                                        children: [
-                                          Text('Hauteur', style: TextStyle(fontWeight: FontWeight.bold)),
-                                          SizedBox(height: 4),
-                                          Text("2' 04\""), // Valeurs à adapter si on les a
-                                        ],
-                                      ),
-                                      Column(
-                                        children: [
-                                          Text('Poids', style: TextStyle(fontWeight: FontWeight.bold)),
-                                          SizedBox(height: 4),
-                                          Text("15.2 lbs"), // Valeurs à adapter
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 24),
-                                  // Breeding, Egg Groups, etc.
-                                  Text(
-                                    'Breeding',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text("Gender : 87.5% male / 12.5% female"),
-                                  Text("Egg Groups: Monster, Grass"),
-                                  Text("Egg Cycle: ..."),
-                                ],
-                              ),
-                            ),
+                    ),
 
-                            // BASE STATS TAB
-                            SingleChildScrollView(
-                              controller: scrollController,
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Base Stats',
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  // Affiche les stats du Pokémon (HP, Atk, Def, etc.)
-                                  buildStatRow('HP', pokemon.stats.hp),
-                                  buildStatRow('Attack', pokemon.stats.atk),
-                                  buildStatRow('Defense', pokemon.stats.def),
-                                  buildStatRow('Sp. Atk', pokemon.stats.speAtk),
-                                  buildStatRow('Sp. Def', pokemon.stats.speDef),
-                                  buildStatRow('Speed', pokemon.stats.vit),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'Type defenses',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  // Affiche les resistances du Pokémon
-                                  Wrap(
-                                    spacing: 6,
-                                    runSpacing: 6,
-                                    children: pokemon.resistances.map((res) {
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey.shade200,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          "${res.name} x${res.multiplier}",
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ],
-                              ),
-                            ),
+                    const SizedBox(height: 16),
 
-                            // EVOLUTION TAB
-                            SingleChildScrollView(
-                              controller: scrollController,
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Evolution Chain',
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  // Affiche la chaîne d'évolution (pre, next, etc.)
-                                  // Exemple simplifié: afficher les évolutions pré et next
-                                  if (pokemon.evolution.pre.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8.0),
-                                      child: Text("Previous: ${pokemon.evolution.pre.map((e) => e.name).join(', ')}"),
-                                    ),
-                                  if (pokemon.evolution.next.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8.0),
-                                      child: Text("Next: ${pokemon.evolution.next.map((e) => e.name).join(', ')}"),
-                                    ),
-                                  // Ici tu peux agrémenter avec des images, des flèches, etc.
-                                ],
-                              ),
-                            ),
-
-                            // Si tu rajoutes Moves, ajoute un 4e enfant ici
-                          ],
-                        ),
+                    // Stats
+                    Text(
+                      'Stats',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade900,
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: 250,
+                            child: RadarChart.light(
+                              ticks: ticks,
+                              features: features,
+                              data: [statsData],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 20,
+                            runSpacing: 10,
+                            children: [
+                              Text('HP: ${pokemon.stats.hp}'),
+                              Text('Atk: ${pokemon.stats.atk}'),
+                              Text('Def: ${pokemon.stats.def}'),
+                              Text('SpA: ${pokemon.stats.speAtk}'),
+                              Text('SpD: ${pokemon.stats.speDef}'),
+                              Text('Vit: ${pokemon.stats.vit}'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Évolution
+                    Text(
+                      'Stade d\'évolution',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        children: [
+                          if (pokemon.evolution.pre.isNotEmpty)
+                            buildEvolutionRow(pokemon.evolution.pre),
+                          if (pokemon.evolution.next.isNotEmpty)
+                            buildEvolutionRow(pokemon.evolution.next),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget buildStatRow(String statName, int value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget buildEvolutionRow(List<PokemonEvolutionDetail> evolutionDetails) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       child: Row(
-        children: [
-          SizedBox(width: 60, child: Text(statName)),
-          const SizedBox(width: 8),
-          SizedBox(width: 30, child: Text(value.toString())),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(3),
+        children: evolutionDetails.map((e) {
+          final evoSpriteUrl = "https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${e.pokedexId}/regular.png";
+          return Row(
+            children: [
+              Column(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    backgroundImage: NetworkImage(evoSpriteUrl),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(e.name),
+                  if (e.condition.isNotEmpty) Text('(${e.condition})', style: const TextStyle(fontSize: 12))
+                ],
               ),
-              width: (value / 100) * MediaQuery.of(context).size.width * 0.4, // barre proportionnelle
-            ),
-          )
-        ],
+              const SizedBox(width: 20),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

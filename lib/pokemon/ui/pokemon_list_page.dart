@@ -115,8 +115,10 @@ class PokemonListPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PokemonDetailPage(pokemon: pokemon),
+                            builder: (context) => PokemonDetailPage(
+                              pokemons: state.pokemons,
+                              currentIndex: index,
+                            ),
                           ),
                         );
                       },

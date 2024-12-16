@@ -64,8 +64,8 @@ class PokemonModel {
           .toList(),
       evolution: PokemonEvolution.fromJson(evolutionJson),
       catchRate: (json['catch_rate'] as int?) ?? 0,
-      height: (json['height'] as String?) ?? '',
-      weight: (json['weight'] as String?) ?? '',
+      height: json['height']?.toString() ?? '',
+      weight: json['weight']?.toString() ?? '',
       maleRate: (sexeJson['male'] is num) ? (sexeJson['male'] as num).toDouble() : 0.0,
       femaleRate: (sexeJson['female'] is num) ? (sexeJson['female'] as num).toDouble() : 0.0,
     );
