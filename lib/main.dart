@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'filter/ui/filter_selection_page.dart';
 import 'pokemon/repository/pokemon_repository.dart';
 import 'pokemon/ui/pokemon_list_page.dart'; // adapter selon ton arborescence

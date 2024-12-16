@@ -6,6 +6,71 @@ import '../bloc/pokemon_bloc.dart';
 import '../bloc/pokemon_state.dart';
 import '../bloc/pokemon_event.dart';
 
+// Fonction utilitaire pour choisir une couleur de fond selon le type principal
+Color getColorForType(String type) {
+  switch (type.toLowerCase()) {
+    case 'fée':
+      return Colors.pinkAccent.shade100;
+    case 'psy':
+      return Colors.purpleAccent.shade100;
+    case 'électrik':
+      return Colors.yellowAccent.shade700;
+    case 'acier':
+      return Colors.blueGrey.shade200;
+    case 'roche':
+      return Colors.amber.shade300;
+    case 'sol':
+      return Colors.orange.shade300;
+    case 'spectre':
+      return Colors.purple.shade300;
+    case 'ténèbres':
+      return Colors.grey.shade800;
+    case 'dragon':
+      return Colors.indigo.shade300;
+    case 'combat':
+      return Colors.red.shade300;
+    case 'glace':
+      return Colors.lightBlue.shade200;
+    case 'plante':
+      return Colors.green.shade300;
+    case 'feu':
+      return Colors.redAccent.shade200;
+    case 'eau':
+      return Colors.blueAccent.shade200;
+    case 'insecte':
+      return Colors.lightGreen.shade400;
+    case 'poison':
+      return Colors.purple.shade200;
+    case 'vol':
+      return Colors.indigo.shade200;
+    case 'normal':
+      return Colors.grey.shade400;
+    // Ajoute d'autres types au besoin...
+    default:
+      return Colors.grey.shade300;
+  }
+}
+
+// Widget pour afficher un type sous forme de petit badge rond
+Widget buildTypeBadge(String type) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    margin: const EdgeInsets.only(right: 5, bottom: 5),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.8),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Text(
+      type,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
+    ),
+  );
+}
+
 class PokemonListPage extends StatelessWidget {
   final PokemonRepository repository;
   const PokemonListPage({Key? key, required this.repository}) : super(key: key);
@@ -29,52 +94,79 @@ class PokemonListPage extends StatelessWidget {
                 return const Center(child: Text('Aucun Pokémon ne correspond à ce filtre.'));
               }
 
-              // On utilise un GridView pour afficher 2 pokémons par ligne, scrollable verticalement.
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: GridView.builder(
                   itemCount: state.pokemons.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,            // 2 colonnes
-                    crossAxisSpacing: 8.0,        // Espace horizontal entre les cartes
-                    mainAxisSpacing: 8.0,         // Espace vertical entre les cartes
-                    childAspectRatio: 0.8,        // Ajuster pour un meilleur rendu (hauteur/largeur)
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10.0,
+                    mainAxisSpacing: 10.0,
+                    childAspectRatio: 1.4, // Ajuste ce ratio pour avoir un rendu proche du design
                   ),
                   itemBuilder: (context, index) {
                     final pokemon = state.pokemons[index];
+                    final primaryType = pokemon.types.isNotEmpty ? pokemon.types[0].name : 'Normal';
+                    final bgColor = getColorForType(primaryType);
+
                     return InkWell(
                       onTap: () {
-                        // Action à réaliser lorsqu'on sélectionne un Pokémon
-                        // Plus tard : naviguer vers une page de détails, etc.
+                        // Action lorsqu'on sélectionne un Pokémon, plus tard tu pourras aller vers la page détail
                       },
                       child: Card(
-                        elevation: 3,
+                        color: bgColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        elevation: 3,
+                        child: Stack(
                           children: [
-                            Expanded(
-                              flex: 4,
-                              child: Image.network(
-                                pokemon.spriteRegular,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              flex: 1,
+                            // Nom du Pokémon en haut à gauche
+                            Positioned(
+                              top: 12,
+                              left: 12,
                               child: Text(
                                 pokemon.nameFr,
-                                textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            // ID du Pokémon en haut à droite (formaté en #XXX, par exemple)
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: Text(
+                                '#${pokemon.id.toString().padLeft(3, '0')}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ),
+                            // Les types sous le nom, à gauche
+                            Positioned(
+                              top: 40,
+                              left: 12,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: pokemon.types.map((t) => buildTypeBadge(t.name)).toList(),
+                              ),
+                            ),
+                            // Le sprite du Pokémon, en bas à droite, plus petit
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              // On peut légèrement sortir de la carte pour un effet stylé (p.ex. right:-10, bottom:-10)
+                              child: Image.network(
+                                pokemon.spriteRegular,
+                                width: 100, // Réduire la taille du sprite
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ],
                         ),
                       ),
