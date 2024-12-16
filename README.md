@@ -1,3 +1,5 @@
 # pokede
 
-A new Flutter project.
+Pokedex en flutter ! En cours de développement !
+
+By KALASHNIKOV Daniel & DAVID Valentin
